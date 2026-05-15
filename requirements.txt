@@ -1,0 +1,5 @@
+Flask>=3.0.0
+requests>=2.31.0
+parsel>=1.8.1
+pandas>=2.2.0
+pyecharts>=2.0.4

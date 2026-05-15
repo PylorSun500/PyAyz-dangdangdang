@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>当当网图书数据爬取与可视化</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .control-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .control-group input {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            width: 100px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .status-box.show {
+            display: block;
+        }
+
+        .status-box.success {
+            border-left-color: #38ef7d;
+            background: #e8f5e9;
+        }
+
+        .status-box.error {
+            border-left-color: #ff6b6b;
+            background: #ffebee;
+        }
+
+        .statistics {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .statistics.show {
+            display: block;
+        }
+
+        .statistics h2 {
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .charts-container {
+            display: none;
+        }
+
+        .charts-container.show {
+            display: block;
+        }
+
+        .chart-box {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .chart-box h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .chart-frame {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 当当网图书数据分析系统</h1>
+            <p>爬取当当网畅销书数据并进行可视化分析</p>
+        </div>
+
+        <div class="control-panel">
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="pages">爬取页数:</label>
+                    <input type="number" id="pages" value="5" min="1" max="20">
+                </div>
+                <button class="btn btn-primary" id="crawlBtn" onclick="startCrawl()">
+                    开始爬取数据
+                </button>
+                <button class="btn btn-success" id="visualizeBtn" onclick="visualizeData()">
+                    生成可视化图表
+                </button>
+            </div>
+
+            <div class="status-box" id="statusBox"></div>
+        </div>
+
+        <div class="statistics" id="statistics">
+            <h2>📊 数据统计</h2>
+            <div class="stats-grid" id="statsGrid"></div>
+        </div>
+
+        <div class="charts-container" id="chartsContainer">
+            <div class="chart-box">
+                <h3>图书售价区间分布</h3>
+                <iframe class="chart-frame" id="pricePieFrame"></iframe>
+            </div>
+
+            <div class="chart-box">
+                <h3>图书售价TOP15</h3>
+                <iframe class="chart-frame" id="priceBarFrame"></iframe>
+            </div>
+
+            <div class="chart-box">
+                <h3>图书评论数TOP15</h3>
+                <iframe class="chart-frame" id="commentBarFrame"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showStatus(message, type = 'info') {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.textContent = message;
+            statusBox.className = 'status-box show ' + type;
+        }
+
+        function showLoading(message) {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>${message}</div>
+                </div>
+            `;
+            statusBox.className = 'status-box show';
+        }
+
+        async function startCrawl() {
+            const pages = document.getElementById('pages').value;
+            const crawlBtn = document.getElementById('crawlBtn');
+
+            crawlBtn.disabled = true;
+            showLoading('正在爬取数据，请稍候...');
+
+            try {
+                const response = await fetch('/crawl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ pages: parseInt(pages) })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus(data.message, 'success');
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('爬取失败: ' + error.message, 'error');
+            } finally {
+                crawlBtn.disabled = false;
+            }
+        }
+
+        async function visualizeData() {
+            const visualizeBtn = document.getElementById('visualizeBtn');
+
+            visualizeBtn.disabled = true;
+            showLoading('正在生成可视化图表，请稍候...');
+
+            try {
+                const response = await fetch('/visualize');
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus(data.message, 'success');
+                    displayStatistics(data.statistics);
+                    loadCharts();
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('可视化失败: ' + error.message, 'error');
+            } finally {
+                visualizeBtn.disabled = false;
+            }
+        }
+
+        function displayStatistics(stats) {
+            const statsGrid = document.getElementById('statsGrid');
+            const statistics = document.getElementById('statistics');
+
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="label">总书籍数</div>
+                    <div class="value">${stats.总书籍数}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">平均售价</div>
+                    <div class="value">¥${stats.平均售价}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">平均评论数</div>
+                    <div class="value">${stats.平均评论数}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">最高售价</div>
+                    <div class="value">¥${stats.最高售价}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">最低售价</div>
+                    <div class="value">¥${stats.最低售价}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">总评论数</div>
+                    <div class="value">${stats.总评论数}</div>
+                </div>
+            `;
+
+            statistics.classList.add('show');
+        }
+
+        function loadCharts() {
+            const chartsContainer = document.getElementById('chartsContainer');
+            const pricePieFrame = document.getElementById('pricePieFrame');
+            const priceBarFrame = document.getElementById('priceBarFrame');
+            const commentBarFrame = document.getElementById('commentBarFrame');
+
+            pricePieFrame.src = '/chart/price_pie';
+            priceBarFrame.src = '/chart/price_bar';
+            commentBarFrame.src = '/chart/comment_bar';
+
+            chartsContainer.classList.add('show');
+        }
+
+        window.onload = function() {
+            showStatus('欢迎使用当当网图书数据分析系统！请先点击"开始爬取数据"按钮。', 'info');
+        };
+    </script>
+</body>
+</html>
