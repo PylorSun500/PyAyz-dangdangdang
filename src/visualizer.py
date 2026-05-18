@@ -33,16 +33,27 @@ class DataVisualizer:
         ]
 
         pie = (
-            Pie(init_opts=opts.InitOpts(theme=ThemeType.DARK, width='100%', height='500px'))
+            Pie(init_opts=opts.InitOpts(theme=ThemeType.LIGHT, width='100%', height='500px', bg_color='#ffffff'))
             .add(
                 '',
                 [list(z) for z in zip(price_ranges, counts)],
                 radius=['40%', '70%'],
-                label_opts=opts.LabelOpts(formatter='{b}: {c}本 ({d}%)')
+                label_opts=opts.LabelOpts(
+                    formatter='{b}: {c}本 ({d}%)',
+                    color='#333333'
+                )
             )
             .set_global_opts(
-                title_opts=opts.TitleOpts(title='图书售价区间分布', pos_left='center'),
-                legend_opts=opts.LegendOpts(orient='vertical', pos_left='left')
+                title_opts=opts.TitleOpts(
+                    title='图书售价区间分布',
+                    pos_left='center',
+                    title_textstyle_opts=opts.TextStyleOpts(color='#333333')
+                ),
+                legend_opts=opts.LegendOpts(
+                    orient='vertical',
+                    pos_left='left',
+                    textstyle_opts=opts.TextStyleOpts(color='#333333')
+                )
             )
         )
 
@@ -93,7 +104,7 @@ class DataVisualizer:
         book_names = [self._format_title(name) for name in top_books['书名'].tolist()]
 
         bar = (
-            Bar(init_opts=opts.InitOpts(theme=ThemeType.DARK, width='100%', height='600px'))
+            Bar(init_opts=opts.InitOpts(theme=ThemeType.LIGHT, width='100%', height='600px', bg_color='#ffffff'))
             .add_xaxis(book_names)
             .add_yaxis(
                 '售价(元)',
@@ -103,11 +114,19 @@ class DataVisualizer:
                 )
             )
             .set_global_opts(
-                title_opts=opts.TitleOpts(title='图书售价TOP15', pos_left='center'),
-                xaxis_opts=opts.AxisOpts(
-                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0)
+                title_opts=opts.TitleOpts(
+                    title='图书售价TOP15',
+                    pos_left='center',
+                    title_textstyle_opts=opts.TextStyleOpts(color='#333333')
                 ),
-                yaxis_opts=opts.AxisOpts(name='售价(元)'),
+                xaxis_opts=opts.AxisOpts(
+                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0, color='#333333')
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    name='售价(元)',
+                    axislabel_opts=opts.LabelOpts(color='#333333'),
+                    name_textstyle_opts=opts.TextStyleOpts(color='#333333')
+                ),
                 datazoom_opts=[opts.DataZoomOpts(type_='slider')]
             )
         )
@@ -127,7 +146,7 @@ class DataVisualizer:
         book_names = [self._format_title(name) for name in top_comments['书名'].tolist()]
 
         bar = (
-            Bar(init_opts=opts.InitOpts(theme=ThemeType.DARK, width='100%', height='600px'))
+            Bar(init_opts=opts.InitOpts(theme=ThemeType.LIGHT, width='100%', height='600px', bg_color='#ffffff'))
             .add_xaxis(book_names)
             .add_yaxis(
                 '评论数',
@@ -140,16 +159,28 @@ class DataVisualizer:
                         opts.MarkLineItem(type_='average', name='平均值'),
                         opts.MarkLineItem(type_='max', name='最大值'),
                         opts.MarkLineItem(type_='min', name='最小值')
-                    ]
+                    ],
+                    label_opts=opts.LabelOpts(color='#333333')
                 )
             )
             .set_global_opts(
-                title_opts=opts.TitleOpts(title='图书评论数TOP15', pos_left='center'),
-                xaxis_opts=opts.AxisOpts(
-                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0)
+                title_opts=opts.TitleOpts(
+                    title='图书评论数TOP15',
+                    pos_left='center',
+                    title_textstyle_opts=opts.TextStyleOpts(color='#333333')
                 ),
-                yaxis_opts=opts.AxisOpts(name='评论数'),
-                datazoom_opts=[opts.DataZoomOpts(type_='slider')]
+                xaxis_opts=opts.AxisOpts(
+                    axislabel_opts=opts.LabelOpts(rotate=45, interval=0, color='#333333')
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    name='评论数',
+                    axislabel_opts=opts.LabelOpts(color='#333333'),
+                    name_textstyle_opts=opts.TextStyleOpts(color='#333333')
+                ),
+                datazoom_opts=[opts.DataZoomOpts(type_='slider')],
+                legend_opts=opts.LegendOpts(
+                    textstyle_opts=opts.TextStyleOpts(color='#333333')
+                )
             )
         )
 
