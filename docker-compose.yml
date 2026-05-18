@@ -1,0 +1,35 @@
+services:
+    dev:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: pyayz-dev
+        hostname: devbox
+        ports:
+            - "5001:5001" # Flask 应用端口
+        volumes:
+            - .:/workspace # 挂载整个项目（热更新）
+        working_dir: /workspace
+        stdin_open: true # 保持 stdin 打开（交互式）
+        tty: true # 分配伪终端
+        environment:
+            - PYTHONUNBUFFERED=1 # Python 日志实时输出
+            - PYTHONDONTWRITEBYTECODE=1 # 不生成 .pyc
+
+    # 可选：纯代码运行服务（不需要手动进容器）
+    web:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: pyayz-web
+        ports:
+            - "5001:5001"
+        volumes:
+            - .:/workspace
+        working_dir: /workspace
+        command: python app.py
+        environment:
+            - PYTHONUNBUFFERED=1
+            - PYTHONDONTWRITEBYTECODE=1
+        profiles:
+            - web # 仅用 docker compose --profile web up 时启动
